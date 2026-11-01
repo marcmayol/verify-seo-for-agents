@@ -1,0 +1,4 @@
+{
+  "description": "agent-ready: installs its binary on first use and serves the scan_site and get_fix_guide tools",
+  "modules": ["./agent-ready.ts"]
+}

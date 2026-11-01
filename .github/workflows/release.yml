@@ -1,0 +1,140 @@
+name: release
+
+# A v* tag builds the binary for each system, makes sure it needs nothing the system doesn't bring,
+# publishes the Release, and then does what a person does: runs the real installer against it.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  compilar:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, target: x86_64-pc-windows-msvc, ext: zip }
+          # musl: fully static, so it runs on any distribution, whatever its libc and however old.
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-musl, ext: tar.gz }
+          - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-musl, ext: tar.gz }
+          - { os: macos-latest, target: aarch64-apple-darwin, ext: tar.gz }
+          - { os: macos-latest, target: x86_64-apple-darwin, ext: tar.gz }
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: A C compiler for musl (the TLS library has some C)
+        if: contains(matrix.target, 'musl')
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: The tag and the versions agree
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          grep -q "^version = \"$v\"" Cargo.toml
+          grep -q "\"version\": \"$v\"" .claude-plugin/plugin.json
+          grep -q "v$v" install.sh
+          grep -q "v$v" install.ps1
+      - run: cargo build --release --locked --target ${{ matrix.target }}
+      - name: It needs nothing the system doesn't bring
+        run: |
+          d=target/${{ matrix.target }}/release
+          case "${{ matrix.target }}" in
+            *-windows-*)
+              if grep -aqiE 'vcruntime|msvcp|api-ms-win-crt' "$d/agent-ready.exe"; then
+                echo "the .exe needs the Visual C++ runtime"; exit 1
+              fi ;;
+            *-linux-*)
+              file "$d/agent-ready" | grep -qE 'static(ally|-pie) linked'
+              # busybox has no libc for it to lean on.
+              docker run --rm -v "$PWD/$d:/h:ro" busybox:stable /h/agent-ready guide robotsTxt | grep -q 'User-agent' ;;
+            *-apple-*)
+              if otool -L "$d/agent-ready" | tail -n +2 | grep -vE '/usr/lib/(libSystem|libiconv)|/System/Library/Frameworks/'; then
+                echo "the binary needs a library macOS doesn't bring"; exit 1
+              fi ;;
+          esac
+      - name: Package and try it
+        run: |
+          d=target/${{ matrix.target }}/release
+          mkdir paquete
+          "$d/agent-ready" guide robotsTxt | grep -q 'User-agent'
+          if [ "${{ matrix.ext }}" = zip ]; then
+            cp "$d/agent-ready.exe" paquete/
+            (cd paquete && 7z a -tzip "../agent-ready-${{ matrix.target }}.zip" agent-ready.exe >/dev/null)
+          else
+            cp "$d/agent-ready" paquete/
+            tar -czf "agent-ready-${{ matrix.target }}.tar.gz" -C paquete agent-ready
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agent-ready-${{ matrix.target }}
+          path: agent-ready-${{ matrix.target }}.${{ matrix.ext }}
+
+  publicar:
+    needs: compilar
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: paquetes
+          merge-multiple: true
+      - name: Checksums and Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          awk -v v="$v" '/^## / { if (dentro) exit; if ($2 == v) { dentro = 1; next } } dentro { print }' CHANGELOG.md > "$RUNNER_TEMP/notas.md"
+          grep -q '[^[:space:]]' "$RUNNER_TEMP/notas.md" || { echo "CHANGELOG.md has no section for $v"; exit 1; }
+          cd paquetes
+          sha256sum agent-ready-* > SHA256SUMS
+          cat SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" agent-ready-* SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --title "agent-ready $GITHUB_REF_NAME" \
+            --notes-file "$RUNNER_TEMP/notas.md"
+
+  instalar:
+    needs: publicar
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and talk to it
+        run: |
+          casa="$(mktemp -d)"
+          mkdir -p "$casa/.codex" "$casa/.gemini"
+          export AGENT_READY_SETUP_HOME="$casa" AGENT_READY_INSTALL_DIR="$casa/bin" AGENT_READY_VERSION="$GITHUB_REF_NAME"
+          sh install.sh
+          grep -q '\[mcp_servers.agent-ready\]' "$casa/.codex/config.toml"
+          grep -q '"agent-ready"' "$casa/.gemini/settings.json"
+          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_fix_guide","arguments":{"check":"acp"}}}' | "$casa/bin/agent-ready" mcp > respuesta.json
+          grep -q 'acp.json' respuesta.json
+
+  instalar-windows:
+    needs: publicar
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and talk to it
+        shell: pwsh
+        run: |
+          $casa = Join-Path $env:RUNNER_TEMP 'casa'
+          New-Item -ItemType Directory -Path (Join-Path $casa '.codex') -Force | Out-Null
+          $env:AGENT_READY_SETUP_HOME = $casa
+          $env:AGENT_READY_INSTALL_DIR = Join-Path $casa 'bin'
+          $env:AGENT_READY_VERSION = $env:GITHUB_REF_NAME
+          $env:AGENT_READY_NO_PATH = '1'
+          ./install.ps1
+          if (-not (Select-String -Quiet -SimpleMatch '[mcp_servers.agent-ready]' (Join-Path $casa '.codex/config.toml'))) { throw 'codex is not set up' }
+          $salida = '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_fix_guide","arguments":{"check":"acp"}}}' | & (Join-Path $casa 'bin/agent-ready.exe') mcp
+          if ($salida -notmatch 'acp\.json') { throw 'the MCP server did not answer' }

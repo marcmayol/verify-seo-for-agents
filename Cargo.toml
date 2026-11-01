@@ -1,0 +1,26 @@
+[package]
+name = "agent-ready"
+version = "0.1.0"
+edition = "2024"
+description = "Check whether a website is ready for AI agents: a local scanner with a CLI, a web UI, an API and an MCP server."
+license = "MIT"
+
+[[bin]]
+name = "agent-ready"
+path = "src/main.rs"
+
+[dependencies]
+regex = "1"
+serde_json = { version = "1", features = ["preserve_order"] }
+sha2 = "0.10"
+tiny_http = "0.12"
+tungstenite = { version = "0.26", default-features = false, features = ["handshake"] }
+ureq = "3"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = "s"
+strip = true
+
+[workspace]

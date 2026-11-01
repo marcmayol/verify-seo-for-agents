@@ -1,0 +1,14 @@
+{
+  "name": "agent-ready",
+  "displayName": "agent-ready",
+  "version": "0.1.0",
+  "description": "Check whether a website is ready for AI agents, and fix what fails: 23 checks, a level from 0 to 5 and a guide for each failure. Runs on your machine and can scan localhost. Installing the plugin is all: it downloads the binary on first use.",
+  "author": {
+    "name": "Marc Mayol",
+    "url": "https://github.com/marcmayol"
+  },
+  "homepage": "https://github.com/marcmayol/agent-ready",
+  "repository": "https://github.com/marcmayol/agent-ready",
+  "license": "MIT",
+  "keywords": ["agents", "mcp", "robots.txt", "llms", "seo", "mod"]
+}

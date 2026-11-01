@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>agent-ready</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #111214; --panel: #1a1b1f; --line: #2c2e34; --text: #ecedef; --dim: #a0a3ab;
+    --accent: #d62828; --pass: #4fb477; --fail: #e8604f; --neutral: #8a8d96; --unable: #d9a441;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: -.01em; }
+  h2 { font-size: 16px; margin: 0; }
+  p.lead { margin: 0 0 24px; color: var(--dim); }
+  form { display: flex; gap: 8px; flex-wrap: wrap; }
+  input[type=text] { flex: 1 1 280px; min-width: 0; padding: 12px 14px; font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+  button { font: inherit; cursor: pointer; border-radius: 6px; }
+  button.go { padding: 12px 22px; background: var(--accent); color: #fff; border: 0; font-weight: 600; }
+  button.go:disabled { opacity: .6; cursor: progress; }
+  fieldset { border: 0; padding: 0; margin: 14px 0 0; display: flex; gap: 16px; flex-wrap: wrap; color: var(--dim); font-size: 14px; }
+  label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  input:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+  #error { color: var(--fail); margin-top: 14px; }
+  #status { color: var(--dim); margin-top: 14px; }
+  .card { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; margin: 28px 0 8px; padding: 20px 22px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+  .big { font-size: 44px; font-weight: 700; line-height: 1; }
+  .big small { font-size: 18px; color: var(--dim); font-weight: 500; }
+  .card .name { font-weight: 600; }
+  .card .target { color: var(--dim); font-size: 14px; overflow-wrap: anywhere; }
+  .card > div:last-child { flex: 1 1 220px; min-width: 0; }
+  .next { color: var(--dim); font-size: 14px; margin: 10px 0 0; }
+  section { margin-top: 24px; }
+  .head { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  .head span { color: var(--dim); font-size: 14px; white-space: nowrap; }
+  details { border-bottom: 1px solid var(--line); }
+  summary { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 10px; padding: 10px 0; cursor: pointer; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  .tag { font-size: 12px; font-weight: 700; text-transform: uppercase; padding-top: 2px; }
+  .pass { color: var(--pass); } .fail { color: var(--fail); } .neutral { color: var(--neutral); } .unableToCheck { color: var(--unable); }
+  .msg { color: var(--dim); font-size: 14px; overflow-wrap: anywhere; }
+  .body { padding: 0 0 14px 68px; font-size: 14px; }
+  .body p { margin: 0 0 8px; }
+  .body a { color: var(--text); overflow-wrap: anywhere; }
+  pre { margin: 0; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: auto; font-size: 12.5px; max-height: 280px; }
+  @media (max-width: 520px) { .body { padding-left: 0; } main { padding-top: 24px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>agent-ready</h1>
+  <p class="lead">Check whether a website is ready for AI agents. Runs on this machine, and can scan localhost.</p>
+  <form id="f">
+    <input id="url" type="text" placeholder="example.com" aria-label="Site to scan" autofocus required>
+    <button class="go" id="go">Scan</button>
+    <fieldset>
+      <label><input type="radio" name="profile" value="all" checked>All checks</label>
+      <label><input type="radio" name="profile" value="content">Content site</label>
+      <label><input type="radio" name="profile" value="apiApp">API or app</label>
+    </fieldset>
+  </form>
+  <div id="status" role="status"></div>
+  <div id="error" role="alert"></div>
+  <div id="results"></div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+// Everything in a report comes from the scanned site, so it only ever goes in as text.
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+const CATS = { discoverability: "Discoverability", contentAccessibility: "Content", botAccessControl: "Bot access control", discovery: "API, auth, MCP and skills", commerce: "Commerce" };
+const TAGS = { pass: "Pass", fail: "Fail", neutral: "N/A", unableToCheck: "Unknown" };
+
+function render(r) {
+  const out = $("results");
+  out.replaceChildren();
+  if (r.siteError) {
+    $("error").textContent = "The homepage answered HTTP " + r.siteError.httpStatus + ", so the checks did not run. If the site blocks automated requests, allow them or scan a copy on localhost.";
+    return;
+  }
+  const card = el("div", "card");
+  const lvl = el("div", "big", r.level);
+  lvl.append(el("small", "", " / 5"));
+  const pct = el("div", "big", r.score.overall + "%");
+  const info = el("div");
+  info.append(el("div", "name", r.levelName), el("div", "target", r.targetUrl));
+  if (r.nextLevel) {
+    const left = r.nextLevel.requirements.map((q) => q.title).join(", ");
+    info.append(el("p", "next", "Next: " + r.nextLevel.name + (left ? " needs " + left : "")));
+  }
+  card.append(lvl, pct, info);
+  out.append(card);
+
+  for (const [cat, name] of Object.entries(CATS)) {
+    const group = r.checks[cat];
+    if (!group) continue;
+    const s = el("section");
+    const head = el("div", "head");
+    const c = r.score.categories[cat];
+    head.append(el("h2", "", name), el("span", "", cat === "commerce" && !r.isCommerce ? "not a store" : c.passed + " of " + c.total));
+    s.append(head);
+    for (const [key, ch] of Object.entries(group)) {
+      const d = el("details");
+      const sum = el("summary");
+      const txt = el("div");
+      txt.append(el("div", "", key), el("div", "msg", ch.message));
+      sum.append(el("span", "tag " + ch.status, TAGS[ch.status] || ch.status), txt);
+      d.append(sum);
+      const body = el("div", "body");
+      if (ch.fix && ch.status !== "neutral") body.append(el("p", "", ch.fix));
+      if (ch.guide) {
+        const link = el("a", "", "Full guide");
+        link.href = "/.well-known/agent-skills/" + encodeURIComponent(ch.guide) + "/SKILL.md";
+        const p = el("p");
+        p.append(link);
+        body.append(p);
+      }
+      body.append(el("pre", "", JSON.stringify({ details: ch.details, evidence: ch.evidence }, null, 2)));
+      d.append(body);
+      s.append(d);
+    }
+    out.append(s);
+  }
+}
+
+// ?url=example.com&profile=content opens a scan directly, so a result can be linked.
+const query = new URLSearchParams(location.search);
+window.addEventListener("DOMContentLoaded", () => {
+  const radio = document.querySelector(`input[name=profile][value="${CSS.escape(query.get("profile") || "all")}"]`);
+  if (radio) radio.checked = true;
+  if (query.get("url")) {
+    $("url").value = query.get("url");
+    $("f").requestSubmit();
+  }
+});
+
+$("f").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("error").textContent = "";
+  $("status").textContent = "Scanning. This takes a few seconds...";
+  $("results").replaceChildren();
+  $("go").disabled = true;
+  try {
+    const profile = new FormData($("f")).get("profile");
+    const res = await fetch("/api/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: $("url").value, profile }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Scan failed");
+    render(data);
+  } catch (err) {
+    $("error").textContent = err.message;
+  } finally {
+    $("status").textContent = "";
+    $("go").disabled = false;
+  }
+});
+</script>
+</body>
+</html>
