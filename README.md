@@ -8,8 +8,6 @@ Checks whether a website is ready for AI agents, on your own machine: 23 checks,
 
 One small binary for Windows, macOS and Linux, with nothing else to install. It works from the terminal, in the browser, as an HTTP API and as an MCP server for your coding agent.
 
-It is an independent tool that follows the public method of [isitagentready.com](https://isitagentready.com), and it is not affiliated with Cloudflare. Its results were compared with that site on 26 websites, and matched in 597 of 598 checks.
-
 ## Install
 
 **Claude Code.** Installing the plugin is all: it downloads the binary on first use.
@@ -79,12 +77,12 @@ DNS-AID and ARD ask Cloudflare's DNS-over-HTTPS resolver, and Google's if that f
 
 A scan loads the page in your browser's sandbox, with a throwaway profile that is deleted afterwards.
 
-## Known differences from the original
+## Limits
 
-- A site listed only in the x402 Bazaar directory is not detected: that lookup depends on a third party.
+- x402 is detected from a site's own answers, so a paid API on paths other than `/api` or `/api/v1` is not found.
 - The MCP check validates the card and does not probe the endpoint.
-- `llms.txt` and `llms-full.txt` are extras of this tool, as the original no longer checks them. They are off by default: `verify-seo scan example.com --checks llmsTxt,llmsFullTxt`.
-- The original's rules were worked out from its answers, since its published method is less precise than its behaviour. This tool follows the behaviour. Which homepages count as a store, and what Auth.md needs without OAuth metadata, are the least certain, and DNS-AID has only been tested against the DNS answer format, as no compared site publishes it.
+- `llms.txt` and `llms-full.txt` are off by default: `verify-seo scan example.com --checks llmsTxt,llmsFullTxt`.
+- Which homepages count as a store, and what Auth.md needs without OAuth metadata, are heuristics. DNS-AID has only been tested against the DNS answer format.
 
 ## Development
 
@@ -93,10 +91,7 @@ cargo test --release
 cargo build --release
 python3 -I tools/probar_guias.py             # every guide's example has to pass its check
 python3 -I tools/web_prueba.py 8799          # local site that implements every standard
-python3 -I tools/calibrar.py                 # compare with saved answers from the original
 ```
-
-`calibrar.py`, and the text comparison in `probar_guias.py`, use reference material kept in `spec/`, which is private and stays out of git. Guides are written from the standards and from what this code checks, never by copying that material.
 
 ## License
 

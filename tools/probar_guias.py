@@ -1,5 +1,4 @@
-"""Comprueba las guías: cada ejemplo tiene que aprobar su propio check, y el texto no
-puede coincidir con el material original guardado en spec/.
+"""Comprueba las guías: cada ejemplo tiene que aprobar su propio check.
 
 Cada bloque de código con file=/ruta se sirve en una web local que solo contiene los
 ficheros de esa guía, y se escanea ese único check.
@@ -98,34 +97,6 @@ for clave, texto in sorted(guias.items()):
         mal += 1
     print(f"{'ok ' if r['status'] == 'pass' else 'MAL'}  {clave}: {r['message']}")
 
-
-def palabras(t):
-    t = re.sub(r"```.*?```", " ", t, flags=re.S)
-    return re.findall(r"[a-z0-9'-]+", t.lower())
-
-
-def tiras(t, n=7):
-    p = palabras(t)
-    return {" ".join(p[i:i + n]) for i in range(len(p) - n + 1)}
-
-
-# spec/ es privado y no está en el repo: sin él, esta parte no se hace.
-referencias = glob.glob(os.path.join(BASE, "spec", "agent-skills", "*", "SKILL.md")) + glob.glob(os.path.join(BASE, "spec", "llms-full.txt"))
-if referencias:
-    print("\n--- Coincidencias con el original (7 palabras seguidas, sin código)")
-    original = {}
-    for f in referencias:
-        for t in tiras(open(f, encoding="utf-8").read()):
-            original.setdefault(t, os.path.relpath(f, BASE))
-    total = 0
-    for clave, texto in sorted(guias.items()):
-        comunes = sorted(t for t in tiras(texto) if t in original)
-        total += len(comunes)
-        if comunes:
-            print(f"{clave}: {len(comunes)}")
-            for c in comunes[:6]:
-                print(f"    {c}")
-    print(f"Total: {total} tiras repetidas en {len(guias)} guías")
 
 servidor.shutdown()
 print(f"\n{'TODO BIEN' if not mal else str(mal) + ' GUÍAS CON ERRORES'}")

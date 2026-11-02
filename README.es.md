@@ -8,8 +8,6 @@ Comprueba en tu propio ordenador si una web está preparada para agentes de IA: 
 
 Es un binario pequeño para Windows, macOS y Linux, sin nada más que instalar. Funciona en la terminal, en el navegador, como API HTTP y como servidor MCP para tu agente.
 
-Es una herramienta independiente que sigue el método público de [isitagentready.com](https://isitagentready.com) y no tiene relación con Cloudflare. Sus resultados se compararon con los de esa web en 26 sitios y coincidieron en 597 de 598 comprobaciones.
-
 ## Instalar
 
 **Claude Code.** Basta con instalar el plugin, que descarga el binario la primera vez que se usa.
@@ -79,12 +77,12 @@ DNS-AID y ARD preguntan al resolutor DNS-over-HTTPS de Cloudflare, y al de Googl
 
 El escaneo carga la página en el sandbox de tu navegador, con un perfil temporal que se borra al terminar.
 
-## Diferencias conocidas con el original
+## Límites
 
-- Una web que solo aparece en el directorio x402 Bazaar no se detecta: esa consulta depende de un tercero.
+- x402 se detecta por las respuestas de la propia web, así que una API de pago en rutas distintas de `/api` o `/api/v1` no se encuentra.
 - La comprobación de MCP valida la tarjeta y no prueba el endpoint.
-- `llms.txt` y `llms-full.txt` son extras de esta herramienta, porque el original ya no las comprueba. Van apagadas por defecto: `verify-seo scan example.com --checks llmsTxt,llmsFullTxt`.
-- Las reglas del original se dedujeron de sus respuestas, porque su método publicado es menos preciso que su comportamiento, y esta herramienta sigue el comportamiento. Lo menos seguro es qué portadas cuentan como tienda y qué necesita Auth.md sin metadatos OAuth. DNS-AID solo se ha probado contra el formato de respuesta DNS, porque ninguna web comparada lo publica.
+- `llms.txt` y `llms-full.txt` van apagadas por defecto: `verify-seo scan example.com --checks llmsTxt,llmsFullTxt`.
+- Qué portadas cuentan como tienda y qué necesita Auth.md sin metadatos OAuth son heurísticas. DNS-AID solo se ha probado contra el formato de respuesta DNS.
 
 ## Desarrollo
 
@@ -93,10 +91,7 @@ cargo test --release
 cargo build --release
 python3 -I tools/probar_guias.py             # el ejemplo de cada guía tiene que aprobar su comprobación
 python3 -I tools/web_prueba.py 8799          # web local que implementa todos los estándares
-python3 -I tools/calibrar.py                 # compara con respuestas guardadas del original
 ```
-
-`calibrar.py` y la comparación de texto de `probar_guias.py` usan material de referencia en `spec/`, que es privado y queda fuera de git. Las guías se escriben a partir de los estándares y de lo que comprueba este código, nunca copiando ese material.
 
 ## Licencia
 
