@@ -100,6 +100,10 @@ jobs:
             --repo "$GITHUB_REPOSITORY" --verify-tag --title "agent-ready $GITHUB_REF_NAME" \
             --notes-file "$RUNNER_TEMP/notas.md"
 
+  modulo:
+    needs: publicar
+    uses: ./.github/workflows/modulo.yml
+
   instalar:
     needs: publicar
     strategy:
