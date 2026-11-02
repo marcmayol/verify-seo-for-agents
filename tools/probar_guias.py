@@ -109,20 +109,23 @@ def tiras(t, n=7):
     return {" ".join(p[i:i + n]) for i in range(len(p) - n + 1)}
 
 
-print("\n--- Coincidencias con el original (7 palabras seguidas, sin código)")
-original = {}
-for f in glob.glob(os.path.join(BASE, "spec", "agent-skills", "*", "SKILL.md")) + [os.path.join(BASE, "spec", "llms-full.txt")]:
-    for t in tiras(open(f, encoding="utf-8").read()):
-        original.setdefault(t, os.path.relpath(f, BASE))
-total = 0
-for clave, texto in sorted(guias.items()):
-    comunes = sorted(t for t in tiras(texto) if t in original)
-    total += len(comunes)
-    if comunes:
-        print(f"{clave}: {len(comunes)}")
-        for c in comunes[:6]:
-            print(f"    {c}")
-print(f"Total: {total} tiras repetidas en {len(guias)} guías")
+# spec/ es privado y no está en el repo: sin él, esta parte no se hace.
+referencias = glob.glob(os.path.join(BASE, "spec", "agent-skills", "*", "SKILL.md")) + glob.glob(os.path.join(BASE, "spec", "llms-full.txt"))
+if referencias:
+    print("\n--- Coincidencias con el original (7 palabras seguidas, sin código)")
+    original = {}
+    for f in referencias:
+        for t in tiras(open(f, encoding="utf-8").read()):
+            original.setdefault(t, os.path.relpath(f, BASE))
+    total = 0
+    for clave, texto in sorted(guias.items()):
+        comunes = sorted(t for t in tiras(texto) if t in original)
+        total += len(comunes)
+        if comunes:
+            print(f"{clave}: {len(comunes)}")
+            for c in comunes[:6]:
+                print(f"    {c}")
+    print(f"Total: {total} tiras repetidas en {len(guias)} guías")
 
 servidor.shutdown()
 print(f"\n{'TODO BIEN' if not mal else str(mal) + ' GUÍAS CON ERRORES'}")
