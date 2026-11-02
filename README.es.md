@@ -6,7 +6,7 @@ Comprueba en tu propio ordenador si una web está preparada para agentes de IA: 
 
 Es un binario pequeño para Windows, macOS y Linux, sin nada más que instalar. Funciona en la terminal, en el navegador, como API HTTP y como servidor MCP para tu agente.
 
-Es una herramienta independiente que sigue el método público de [isitagentready.com](https://isitagentready.com) y no tiene relación con Cloudflare. Sus resultados se compararon con los de esa web en 29 sitios y coincidieron en 597 de 598 comprobaciones.
+Es una herramienta independiente que sigue el método público de [isitagentready.com](https://isitagentready.com) y no tiene relación con Cloudflare. Sus resultados se compararon con los de esa web en 26 sitios y coincidieron en 597 de 598 comprobaciones.
 
 ## Instalar
 

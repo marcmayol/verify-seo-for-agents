@@ -6,7 +6,7 @@ Checks whether a website is ready for AI agents, on your own machine: 23 checks,
 
 One small binary for Windows, macOS and Linux, with nothing else to install. It works from the terminal, in the browser, as an HTTP API and as an MCP server for your coding agent.
 
-It is an independent tool that follows the public method of [isitagentready.com](https://isitagentready.com), and it is not affiliated with Cloudflare. Its results were compared with that site on 29 websites, and matched in 597 of 598 checks.
+It is an independent tool that follows the public method of [isitagentready.com](https://isitagentready.com), and it is not affiliated with Cloudflare. Its results were compared with that site on 26 websites, and matched in 597 of 598 checks.
 
 ## Install
 
