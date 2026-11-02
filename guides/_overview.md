@@ -1,20 +1,20 @@
-# agent-ready
+# verify-seo-for-agents
 
-agent-ready checks whether a website is ready for AI agents. It runs on your own machine, and it can scan `localhost`.
+verify-seo-for-agents checks whether a website is ready for AI agents. It runs on your own machine, and it can scan `localhost`.
 
 ## Run a scan
 
 Terminal:
 
 ```sh
-agent-ready scan https://example.com          # summary
-agent-ready scan https://example.com --json   # full report
-agent-ready scan https://example.com --agent  # Markdown with what to fix
-agent-ready scan https://example.com --checks robotsTxt,sitemap
-agent-ready guide robotsTxt                   # how to fix one check
+verify-seo scan https://example.com          # summary
+verify-seo scan https://example.com --json   # full report
+verify-seo scan https://example.com --agent  # Markdown with what to fix
+verify-seo scan https://example.com --checks robotsTxt,sitemap
+verify-seo guide robotsTxt                   # how to fix one check
 ```
 
-Local server, started with `agent-ready serve`:
+Local server, started with `verify-seo serve`:
 
 ```
 POST /api/scan
@@ -23,7 +23,7 @@ POST /api/scan
 
 `url` is the only required field. `profile` is `all`, `content` or `apiApp`, `enabledChecks` is a list of checks that replaces the profile, and `format` is `json` or `agent`.
 
-MCP, over stdio with `agent-ready mcp` or at `POST /mcp` on the server. The tools are `scan_site` and `get_fix_guide`.
+MCP, over stdio with `verify-seo mcp` or at `POST /mcp` on the server. The tools are `scan_site` and `get_fix_guide`.
 
 ## The report
 

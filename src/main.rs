@@ -10,17 +10,17 @@ mod setup;
 
 use serde_json::Value;
 
-const USAGE: &str = "agent-ready: check whether a website is ready for AI agents
+const USAGE: &str = "verify-seo: check whether a website is ready for AI agents
 
 Usage:
-  agent-ready scan <url> [--json | --agent] [--profile all|content|apiApp] [--checks a,b] [--min-level N]
-  agent-ready guide [check]
-  agent-ready docs
-  agent-ready serve [--port 8787] [--host 127.0.0.1]
-  agent-ready mcp
-  agent-ready setup <agent> [--dry-run]
-  agent-ready setup --all [--dry-run]
-  agent-ready --version
+  verify-seo scan <url> [--json | --agent] [--profile all|content|apiApp] [--checks a,b] [--min-level N]
+  verify-seo guide [check]
+  verify-seo docs
+  verify-seo serve [--port 8787] [--host 127.0.0.1]
+  verify-seo mcp
+  verify-seo setup <agent> [--dry-run]
+  verify-seo setup --all [--dry-run]
+  verify-seo --version
 
 scan    Prints a summary, the full report (--json) or what to fix (--agent).
         With --min-level, exits with 2 when the site is below that level.
@@ -28,12 +28,12 @@ guide   How to pass one check, or the list of checks.
 docs    The full documentation, as served at /llms-full.txt.
 serve   Web UI, POST /api/scan, POST /mcp, /llms.txt and the skills index.
 mcp     MCP server over stdio.
-setup   Gets a coding agent ready: MCP server, instructions and /agent-ready. --all does it in
+setup   Gets a coding agent ready: MCP server, instructions and /verify-seo. --all does it in
         every agent found on this computer. Agents: codex, gemini, cursor, opencode, qwen, kiro,
         copilot, windsurf, antigravity, kimi, pi, amp, kilo, grok. In Claude Code use the plugin:
-        /plugin marketplace add marcmayol/drac-plugins, then /plugin install agent-ready@drac
+        /plugin marketplace add marcmayol/drac-plugins, then /plugin install verify-seo-for-agents@drac
 
-WebMCP needs a Chromium-based browser installed; set AGENT_READY_BROWSER to pick one.";
+WebMCP needs a Chromium-based browser installed; set VERIFY_SEO_BROWSER to pick one.";
 
 fn flag(args: &[String], name: &str) -> Option<String> {
     args.iter().position(|a| a == name).and_then(|i| args.get(i + 1)).cloned()
@@ -115,12 +115,12 @@ fn cmd_setup(args: &[String]) -> Result<i32, String> {
         return Err(format!("Which agent? {}, or --all", setup::AGENTES.join(", ")));
     }
     if all && agents.is_empty() {
-        println!("No agent found on this computer. Name one: agent-ready setup <agent>");
+        println!("No agent found on this computer. Name one: verify-seo setup <agent>");
     }
     let mut failed = 0;
     for agent in &agents {
         if agent == "claude" {
-            println!("claude: use the plugin: /plugin marketplace add marcmayol/drac-plugins, then /plugin install agent-ready@drac");
+            println!("claude: use the plugin: /plugin marketplace add marcmayol/drac-plugins, then /plugin install verify-seo-for-agents@drac");
             continue;
         }
         match setup::plan(agent) {
@@ -148,7 +148,7 @@ fn cmd_setup(args: &[String]) -> Result<i32, String> {
     if failed > 0 { Err(format!("{failed} agent(s) failed")) } else { Ok(0) }
 }
 
-/// `agent-ready tool` lists the tools; `agent-ready tool <name>` runs one with JSON arguments from stdin.
+/// `verify-seo tool` lists the tools; `verify-seo tool <name>` runs one with JSON arguments from stdin.
 fn cmd_tool(args: &[String]) -> Result<i32, String> {
     let Some(name) = args.first() else {
         println!("{}", mcp::list_tools());
@@ -169,7 +169,7 @@ fn main() {
         Some("setup") => cmd_setup(rest),
         Some("tool") => cmd_tool(rest),
         Some("--version" | "-V") => {
-            println!("agent-ready {}", env!("CARGO_PKG_VERSION"));
+            println!("verify-seo {}", env!("CARGO_PKG_VERSION"));
             Ok(0)
         }
         Some("guide") => cmd_guide(rest),

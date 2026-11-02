@@ -82,7 +82,7 @@ pub fn run(host: &str, port: u16) -> Result<(), String> {
     let server = Server::http((host, port)).map_err(|e| format!("Could not listen on {host}:{port}: {e}"))?;
     let public = !matches!(host, "127.0.0.1" | "localhost" | "::1");
     let port = server.server_addr().to_ip().map_or(port, |a| a.port());
-    println!("agent-ready listening on http://{host}:{port}");
+    println!("verify-seo listening on http://{host}:{port}");
     if public {
         println!("Warning: anyone who can reach this address can make this machine fetch URLs on its network.");
     }

@@ -46,15 +46,15 @@ jobs:
           d=target/${{ matrix.target }}/release
           case "${{ matrix.target }}" in
             *-windows-*)
-              if grep -aqiE 'vcruntime|msvcp|api-ms-win-crt' "$d/agent-ready.exe"; then
+              if grep -aqiE 'vcruntime|msvcp|api-ms-win-crt' "$d/verify-seo.exe"; then
                 echo "the .exe needs the Visual C++ runtime"; exit 1
               fi ;;
             *-linux-*)
-              file "$d/agent-ready" | grep -qE 'static(ally|-pie) linked'
+              file "$d/verify-seo" | grep -qE 'static(ally|-pie) linked'
               # busybox has no libc for it to lean on.
-              docker run --rm -v "$PWD/$d:/h:ro" busybox:stable /h/agent-ready guide robotsTxt | grep -q 'User-agent' ;;
+              docker run --rm -v "$PWD/$d:/h:ro" busybox:stable /h/verify-seo guide robotsTxt | grep -q 'User-agent' ;;
             *-apple-*)
-              if otool -L "$d/agent-ready" | tail -n +2 | grep -vE '/usr/lib/(libSystem|libiconv)|/System/Library/Frameworks/'; then
+              if otool -L "$d/verify-seo" | tail -n +2 | grep -vE '/usr/lib/(libSystem|libiconv)|/System/Library/Frameworks/'; then
                 echo "the binary needs a library macOS doesn't bring"; exit 1
               fi ;;
           esac
@@ -62,18 +62,18 @@ jobs:
         run: |
           d=target/${{ matrix.target }}/release
           mkdir paquete
-          "$d/agent-ready" guide robotsTxt | grep -q 'User-agent'
+          "$d/verify-seo" guide robotsTxt | grep -q 'User-agent'
           if [ "${{ matrix.ext }}" = zip ]; then
-            cp "$d/agent-ready.exe" paquete/
-            (cd paquete && 7z a -tzip "../agent-ready-${{ matrix.target }}.zip" agent-ready.exe >/dev/null)
+            cp "$d/verify-seo.exe" paquete/
+            (cd paquete && 7z a -tzip "../verify-seo-${{ matrix.target }}.zip" verify-seo.exe >/dev/null)
           else
-            cp "$d/agent-ready" paquete/
-            tar -czf "agent-ready-${{ matrix.target }}.tar.gz" -C paquete agent-ready
+            cp "$d/verify-seo" paquete/
+            tar -czf "verify-seo-${{ matrix.target }}.tar.gz" -C paquete verify-seo
           fi
       - uses: actions/upload-artifact@v4
         with:
-          name: agent-ready-${{ matrix.target }}
-          path: agent-ready-${{ matrix.target }}.${{ matrix.ext }}
+          name: verify-seo-${{ matrix.target }}
+          path: verify-seo-${{ matrix.target }}.${{ matrix.ext }}
 
   publicar:
     needs: compilar
@@ -94,10 +94,10 @@ jobs:
           awk -v v="$v" '/^## / { if (dentro) exit; if ($2 == v) { dentro = 1; next } } dentro { print }' CHANGELOG.md > "$RUNNER_TEMP/notas.md"
           grep -q '[^[:space:]]' "$RUNNER_TEMP/notas.md" || { echo "CHANGELOG.md has no section for $v"; exit 1; }
           cd paquetes
-          sha256sum agent-ready-* > SHA256SUMS
+          sha256sum verify-seo-* > SHA256SUMS
           cat SHA256SUMS
-          gh release create "$GITHUB_REF_NAME" agent-ready-* SHA256SUMS \
-            --repo "$GITHUB_REPOSITORY" --verify-tag --title "agent-ready $GITHUB_REF_NAME" \
+          gh release create "$GITHUB_REF_NAME" verify-seo-* SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --title "verify-seo $GITHUB_REF_NAME" \
             --notes-file "$RUNNER_TEMP/notas.md"
 
   modulo:
@@ -117,11 +117,11 @@ jobs:
         run: |
           casa="$(mktemp -d)"
           mkdir -p "$casa/.codex" "$casa/.gemini"
-          export AGENT_READY_SETUP_HOME="$casa" AGENT_READY_INSTALL_DIR="$casa/bin" AGENT_READY_VERSION="$GITHUB_REF_NAME"
+          export VERIFY_SEO_SETUP_HOME="$casa" VERIFY_SEO_INSTALL_DIR="$casa/bin" VERIFY_SEO_VERSION="$GITHUB_REF_NAME"
           sh install.sh
-          grep -q '\[mcp_servers.agent-ready\]' "$casa/.codex/config.toml"
-          grep -q '"agent-ready"' "$casa/.gemini/settings.json"
-          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_fix_guide","arguments":{"check":"acp"}}}' | "$casa/bin/agent-ready" mcp > respuesta.json
+          grep -q '\[mcp_servers.verify-seo\]' "$casa/.codex/config.toml"
+          grep -q '"verify-seo"' "$casa/.gemini/settings.json"
+          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_fix_guide","arguments":{"check":"acp"}}}' | "$casa/bin/verify-seo" mcp > respuesta.json
           grep -q 'acp.json' respuesta.json
 
   instalar-windows:
@@ -134,11 +134,11 @@ jobs:
         run: |
           $casa = Join-Path $env:RUNNER_TEMP 'casa'
           New-Item -ItemType Directory -Path (Join-Path $casa '.codex') -Force | Out-Null
-          $env:AGENT_READY_SETUP_HOME = $casa
-          $env:AGENT_READY_INSTALL_DIR = Join-Path $casa 'bin'
-          $env:AGENT_READY_VERSION = $env:GITHUB_REF_NAME
-          $env:AGENT_READY_NO_PATH = '1'
+          $env:VERIFY_SEO_SETUP_HOME = $casa
+          $env:VERIFY_SEO_INSTALL_DIR = Join-Path $casa 'bin'
+          $env:VERIFY_SEO_VERSION = $env:GITHUB_REF_NAME
+          $env:VERIFY_SEO_NO_PATH = '1'
           ./install.ps1
-          if (-not (Select-String -Quiet -SimpleMatch '[mcp_servers.agent-ready]' (Join-Path $casa '.codex/config.toml'))) { throw 'codex is not set up' }
-          $salida = '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_fix_guide","arguments":{"check":"acp"}}}' | & (Join-Path $casa 'bin/agent-ready.exe') mcp
+          if (-not (Select-String -Quiet -SimpleMatch '[mcp_servers.verify-seo]' (Join-Path $casa '.codex/config.toml'))) { throw 'codex is not set up' }
+          $salida = '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_fix_guide","arguments":{"check":"acp"}}}' | & (Join-Path $casa 'bin/verify-seo.exe') mcp
           if ($salida -notmatch 'acp\.json') { throw 'the MCP server did not answer' }

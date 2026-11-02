@@ -1,23 +1,23 @@
-# Installs agent-ready on Windows and gets ready every agent it finds. Nothing else is needed: the
+# Installs verify-seo on Windows and gets ready every agent it finds. Nothing else is needed: the
 # binary depends on no runtime or library.
-#   irm https://raw.githubusercontent.com/marcmayol/agent-ready/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/marcmayol/verify-seo-for-agents/main/install.ps1 | iex
 #
 # Optional variables:
-#   AGENT_READY_INSTALL_DIR   where the binary goes (default %LOCALAPPDATA%\Programs\agent-ready)
-#   AGENT_READY_VERSION       a specific release tag (default below)
-#   AGENT_READY_NO_PATH=1     don't add the folder to the user PATH
-#   AGENT_READY_NO_SETUP=1    only install the binary, don't touch any agent
+#   VERIFY_SEO_INSTALL_DIR   where the binary goes (default %LOCALAPPDATA%\Programs\verify-seo)
+#   VERIFY_SEO_VERSION       a specific release tag (default below)
+#   VERIFY_SEO_NO_PATH=1     don't add the folder to the user PATH
+#   VERIFY_SEO_NO_SETUP=1    only install the binary, don't touch any agent
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'  # without the progress bar, Invoke-WebRequest is much faster on PowerShell 5.1
 
-$repo = 'marcmayol/agent-ready'
-$tag = if ($env:AGENT_READY_VERSION) { $env:AGENT_READY_VERSION } else { 'v0.1.0' }
-$dir = if ($env:AGENT_READY_INSTALL_DIR) { $env:AGENT_READY_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Programs\agent-ready' }
+$repo = 'marcmayol/verify-seo-for-agents'
+$tag = if ($env:VERIFY_SEO_VERSION) { $env:VERIFY_SEO_VERSION } else { 'v0.1.1' }
+$dir = if ($env:VERIFY_SEO_INSTALL_DIR) { $env:VERIFY_SEO_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Programs\verify-seo' }
 $base = "https://github.com/$repo/releases/download/$tag"
 # Windows on ARM runs the x64 binary through emulation.
-$paquete = 'agent-ready-x86_64-pc-windows-msvc.zip'
+$paquete = 'verify-seo-x86_64-pc-windows-msvc.zip'
 
-$tmp = Join-Path ([IO.Path]::GetTempPath()) ("agent-ready-" + [guid]::NewGuid())
+$tmp = Join-Path ([IO.Path]::GetTempPath()) ("verify-seo-" + [guid]::NewGuid())
 New-Item -ItemType Directory -Path $tmp | Out-Null
 try {
     Write-Host "Downloading $paquete..."
@@ -32,15 +32,15 @@ try {
 
     Expand-Archive (Join-Path $tmp $paquete) -DestinationPath $tmp -Force
     New-Item -ItemType Directory -Path $dir -Force | Out-Null
-    $exe = Join-Path $dir 'agent-ready.exe'
+    $exe = Join-Path $dir 'verify-seo.exe'
     try {
-        Copy-Item (Join-Path $tmp 'agent-ready.exe') $exe -Force
+        Copy-Item (Join-Path $tmp 'verify-seo.exe') $exe -Force
     } catch {
         throw "can't replace ${exe}: an open agent session is probably using it. Close them and run the installer again."
     }
     Write-Host "Installed: $exe ($(& $exe --version))"
 
-    if (-not $env:AGENT_READY_NO_PATH) {
+    if (-not $env:VERIFY_SEO_NO_PATH) {
         $usuario = [Environment]::GetEnvironmentVariable('Path', 'User')
         if (-not (($usuario -split ';') -contains $dir)) {
             [Environment]::SetEnvironmentVariable('Path', ($(if ($usuario) { "$usuario;" }) + $dir), 'User')
@@ -48,13 +48,13 @@ try {
         }
         if (-not (($env:Path -split ';') -contains $dir)) { $env:Path = "$env:Path;$dir" }
     }
-    if ($env:AGENT_READY_NO_SETUP) {
-        Write-Host "Next: agent-ready setup <agent>   (or --all, for every agent on this computer)"
+    if ($env:VERIFY_SEO_NO_SETUP) {
+        Write-Host "Next: verify-seo setup <agent>   (or --all, for every agent on this computer)"
     } else {
         # The agents get the binary's full path, so they find it even without the PATH change.
         & $exe setup --all
         if ($LASTEXITCODE -ne 0) { Write-Warning "some agents couldn't be set up (see above); the others are ready." }
-        Write-Host "An agent you install later: agent-ready setup <agent>"
+        Write-Host "An agent you install later: verify-seo setup <agent>"
     }
 } finally {
     Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue

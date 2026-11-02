@@ -1,4 +1,4 @@
-// Runs the real Claude Code module (hooks/agent-ready.ts) against the published Release, from an empty
+// Runs the real Claude Code module (hooks/verify-seo.ts) against the published Release, from an empty
 // home folder: it has to download the binary, check it, register the tools and answer through them.
 // Claude Code itself isn't involved, only the small part of its API that the module uses.
 //   node tools/probar_modulo.mjs
@@ -12,7 +12,7 @@ const raiz = join(dirname(fileURLToPath(import.meta.url)), '..')
 const casa = mkdtempSync(join(tmpdir(), 'modulo-'))
 process.env.HOME = casa
 process.env.USERPROFILE = casa
-delete process.env.AGENT_READY_BIN
+delete process.env.VERIFY_SEO_BIN
 
 const herramientas = []
 const ordenes = []
@@ -43,7 +43,7 @@ const $ = {
 }
 
 const ganchos = []
-const { register } = await import(new URL('../hooks/agent-ready.ts', import.meta.url))
+const { register } = await import(new URL('../hooks/verify-seo.ts', import.meta.url))
 register((nombre, a, b) => ganchos.push({ nombre, filtro: b ? a : undefined, f: b ?? a }))
 
 const gancho = (nombre, clave, valor) => ganchos.find(g => g.nombre === nombre && (clave === undefined || g.filtro?.[clave] === valor)).f
@@ -54,17 +54,17 @@ const comprobar = (bien, que) => {
 
 await gancho('session.start')($, {}, async e => e)
 
-const bin = join(casa, '.agent-ready', 'bin', process.platform === 'win32' ? 'agent-ready.exe' : 'agent-ready')
+const bin = join(casa, '.verify-seo', 'bin', process.platform === 'win32' ? 'verify-seo.exe' : 'verify-seo')
 comprobar(existsSync(bin), `the binary was installed in ${bin}`)
 comprobar(!avisos.some(t => t.includes("couldn't")), 'no install error')
 comprobar(herramientas.map(t => t.name).join() === 'scan_site,get_fix_guide', 'both tools are registered')
-comprobar(ordenes.some(c => c.name === 'agent-ready'), 'the /agent-ready command is registered')
+comprobar(ordenes.some(c => c.name === 'verify-seo'), 'the /verify-seo command is registered')
 
-const guia = await gancho('tool.call', 'tool', 'mcp__agent-ready__get_fix_guide')($, { tool: 'x', tool_use_id: 'y', check: 'acp' })
+const guia = await gancho('tool.call', 'tool', 'mcp__verify-seo-for-agents__get_fix_guide')($, { tool: 'x', tool_use_id: 'y', check: 'acp' })
 comprobar(guia.result?.includes('acp.json'), 'get_fix_guide answers')
 
-const escaneo = await gancho('tool.call', 'tool', 'mcp__agent-ready__scan_site')($, { tool: 'x', tool_use_id: 'y', url: 'https://github.com', format: 'json' })
+const escaneo = await gancho('tool.call', 'tool', 'mcp__verify-seo-for-agents__scan_site')($, { tool: 'x', tool_use_id: 'y', url: 'https://github.com', format: 'json' })
 comprobar(JSON.parse(escaneo.result ?? '{}').checks?.discoverability?.robotsTxt?.status === 'pass', 'scan_site scans a real site')
 
-const malo = await gancho('tool.call', 'tool', 'mcp__agent-ready__get_fix_guide')($, { tool: 'x', tool_use_id: 'y', check: 'nope' })
+const malo = await gancho('tool.call', 'tool', 'mcp__verify-seo-for-agents__get_fix_guide')($, { tool: 'x', tool_use_id: 'y', check: 'nope' })
 comprobar(malo.deny !== undefined, 'a tool error comes back as an error')

@@ -16,7 +16,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-NOMBRE = "agent-ready.exe" if os.name == "nt" else "agent-ready"
+NOMBRE = "verify-seo.exe" if os.name == "nt" else "verify-seo"
 BIN = sys.argv[1] if len(sys.argv) > 1 else os.path.join(BASE, "target", "release", NOMBRE)
 PORT = 8798
 sys.stdout.reconfigure(encoding="utf-8")

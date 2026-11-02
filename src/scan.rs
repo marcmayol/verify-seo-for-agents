@@ -323,7 +323,7 @@ pub fn agent_markdown(report: &Value) -> String {
             let m = meta::meta(key);
             any = true;
             out.push_str(&format!(
-                "## {}\n{}\nFix: {}\nFull guide: `agent-ready guide {key}` or the get_fix_guide tool with check \"{key}\"\nSpec: {}\n\n",
+                "## {}\n{}\nFix: {}\nFull guide: `verify-seo guide {key}` or the get_fix_guide tool with check \"{key}\"\nSpec: {}\n\n",
                 m.title,
                 check["message"].as_str().unwrap_or(""),
                 m.fix,

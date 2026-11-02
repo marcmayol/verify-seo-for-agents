@@ -8,7 +8,7 @@ use std::time::Duration;
 use ureq::{Agent, ResponseExt};
 
 const MAX_BODY: u64 = 3 * 1024 * 1024;
-pub const USER_AGENT: &str = concat!("Mozilla/5.0 (compatible; agent-ready/", env!("CARGO_PKG_VERSION"), ")");
+pub const USER_AGENT: &str = concat!("Mozilla/5.0 (compatible; verify-seo/", env!("CARGO_PKG_VERSION"), ")");
 
 #[derive(Default)]
 pub struct Resp {

@@ -1,15 +1,15 @@
-//! `agent-ready setup <agent>`: registers the MCP server, a paragraph of instructions and an
-//! `/agent-ready` command, in the same 14 agents and the same files as `omoi setup`. Everything is worked out first, so `--dry-run` shows the
-//! same plan; nothing is written twice, and each file touched gets a `.before-agent-ready` copy once.
+//! `verify-seo setup <agent>`: registers the MCP server, a paragraph of instructions and an
+//! `/verify-seo` command, in the same 14 agents and the same files as `omoi setup`. Everything is worked out first, so `--dry-run` shows the
+//! same plan; nothing is written twice, and each file touched gets a `.before-verify-seo` copy once.
 
 use serde_json::{Map, Value, json};
 use std::path::{Path, PathBuf};
 
 pub const AGENTES: &[&str] = &["codex", "gemini", "cursor", "opencode", "qwen", "kiro", "copilot", "windsurf", "antigravity", "kimi", "pi", "amp", "kilo", "grok"];
 
-const INICIO: &str = "<!-- agent-ready -->";
-const FIN: &str = "<!-- /agent-ready -->";
-const INSTRUCCIONES: &str = "## agent-ready\n\nYou have the `scan_site` and `get_fix_guide` tools (MCP, server `agent-ready`). When the user asks whether a website works for AI agents, or asks you to make it work for them, scan it with `scan_site`: it also works on localhost, so use it on a site you are building. Work upward from the current level, reading `get_fix_guide` for each check you fix, and scan again to confirm. Some checks don't apply to every site: don't add a login or payment protocol that the site doesn't need just to raise the score.";
+const INICIO: &str = "<!-- verify-seo -->";
+const FIN: &str = "<!-- /verify-seo -->";
+const INSTRUCCIONES: &str = "## verify-seo\n\nYou have the `scan_site` and `get_fix_guide` tools (MCP, server `verify-seo`). When the user asks whether a website works for AI agents, or asks you to make it work for them, scan it with `scan_site`: it also works on localhost, so use it on a site you are building. Work upward from the current level, reading `get_fix_guide` for each check you fix, and scan again to confirm. Some checks don't apply to every site: don't add a login or payment protocol that the site doesn't need just to raise the score.";
 
 const DESCRIPCION_ORDEN: &str = "Check whether a website is ready for AI agents, and fix what fails";
 const TEXTO_ORDEN: &str = "Scan the site the user wrote after this command with the `scan_site` tool. If they gave none, use the site of the current project, running it locally if that is how it works. Report the level, the score and what is missing for the next level. If the project is the site's source code, offer to fix those checks: read `get_fix_guide` for each, apply it, and scan again to confirm. Skip the checks that make no sense for this site, such as a payment protocol on a site that sells nothing, and say why.";
@@ -21,7 +21,7 @@ pub struct Cambio {
 }
 
 fn casa() -> Result<PathBuf, String> {
-    if let Some(h) = std::env::var_os("AGENT_READY_SETUP_HOME") {
+    if let Some(h) = std::env::var_os("VERIFY_SEO_SETUP_HOME") {
         return Ok(PathBuf::from(h));
     }
     let v = if cfg!(windows) { "USERPROFILE" } else { "HOME" };
@@ -35,7 +35,7 @@ fn binario() -> Result<String, String> {
 }
 
 fn sin_probar() -> bool {
-    std::env::var_os("AGENT_READY_SETUP_HOME").is_none()
+    std::env::var_os("VERIFY_SEO_SETUP_HOME").is_none()
 }
 
 fn carpeta_opencode(h: &Path) -> PathBuf {
@@ -85,8 +85,8 @@ fn bonito(v: &Value) -> String {
 fn mcp_json(v: &mut Vec<Cambio>, fichero: PathBuf, raiz: &str, entrada: Value) -> Result<(), String> {
     let mut j = leer_json(&fichero)?;
     let servidores = objeto(&mut j, raiz);
-    if !servidores.contains_key("agent-ready") {
-        servidores.insert("agent-ready".into(), entrada);
+    if !servidores.contains_key("verify-seo") {
+        servidores.insert("verify-seo".into(), entrada);
         v.push(Cambio { fichero, que: "MCP server", contenido: bonito(&j) });
     }
     Ok(())
@@ -96,14 +96,14 @@ fn toml_texto(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
 
-/// `[mcp_servers.agent-ready]` in Codex's or Grok's `config.toml`.
+/// `[mcp_servers.verify-seo]` in Codex's or Grok's `config.toml`.
 fn mcp_toml(v: &mut Vec<Cambio>, toml: PathBuf, bin: &str) -> Result<(), String> {
     let actual = if toml.exists() { std::fs::read_to_string(&toml).map_err(|e| format!("{}: {e}", toml.display()))? } else { String::new() };
     // Also when it's already an inline table: a second one would leave the file unreadable.
-    let ya = actual.contains("[mcp_servers.agent-ready]") || actual.lines().any(|l| l.trim_start().starts_with("agent-ready") && l.contains('='));
+    let ya = actual.contains("[mcp_servers.verify-seo]") || actual.lines().any(|l| l.trim_start().starts_with("verify-seo") && l.contains('='));
     if !ya {
         let sep = if actual.is_empty() || actual.ends_with('\n') { "" } else { "\n" };
-        let contenido = format!("{actual}{sep}\n[mcp_servers.agent-ready]\ncommand = {}\nargs = [\"mcp\"]\n", toml_texto(bin));
+        let contenido = format!("{actual}{sep}\n[mcp_servers.verify-seo]\ncommand = {}\nargs = [\"mcp\"]\n", toml_texto(bin));
         v.push(Cambio { fichero: toml, que: "MCP server", contenido });
     }
     Ok(())
@@ -132,9 +132,9 @@ fn orden(v: &mut Vec<Cambio>, carpeta: PathBuf, formato: Formato) {
         Formato::Md(false) => ("md", format!("{TEXTO_ORDEN}\n")),
         Formato::Toml => ("toml", format!("description = {}\nprompt = {}\n", toml_texto(DESCRIPCION_ORDEN), toml_texto(TEXTO_ORDEN))),
     };
-    let fichero = carpeta.join(format!("agent-ready.{ext}"));
+    let fichero = carpeta.join(format!("verify-seo.{ext}"));
     if !fichero.exists() {
-        v.push(Cambio { fichero, que: "/agent-ready command", contenido });
+        v.push(Cambio { fichero, que: "/verify-seo command", contenido });
     }
 }
 
@@ -179,7 +179,7 @@ pub fn plan(agente: &str) -> Result<Vec<Cambio>, String> {
         "kiro" => {
             let d = h.join(".kiro");
             mcp_json(&mut v, d.join("settings").join("mcp.json"), "mcpServers", normal)?;
-            instrucciones(&mut v, d.join("steering").join("agent-ready.md"))?;
+            instrucciones(&mut v, d.join("steering").join("verify-seo.md"))?;
             orden(&mut v, d.join("prompts"), Formato::Md(false));
         }
         "copilot" => {
@@ -219,14 +219,14 @@ pub fn plan(agente: &str) -> Result<Vec<Cambio>, String> {
         "kilo" => {
             // Kilo reads its rules from the files listed under `instructions`.
             let d = h.join(".config").join("kilo");
-            let reglas = d.join("agent-ready.md");
+            let reglas = d.join("verify-seo.md");
             let ruta = reglas.to_string_lossy().replace('\\', "/");
             let fichero = d.join("kilo.jsonc");
             let mut j = leer_json(&fichero)?;
             let servidores = objeto(&mut j, "mcp");
-            let a = !servidores.contains_key("agent-ready");
+            let a = !servidores.contains_key("verify-seo");
             if a {
-                servidores.insert("agent-ready".into(), local);
+                servidores.insert("verify-seo".into(), local);
             }
             if !j.get("instructions").is_some_and(Value::is_array) {
                 j["instructions"] = json!([]);
@@ -245,7 +245,7 @@ pub fn plan(agente: &str) -> Result<Vec<Cambio>, String> {
         "grok" => {
             let d = carpeta_grok(&h);
             mcp_toml(&mut v, d.join("config.toml"), &bin)?;
-            instrucciones(&mut v, d.join("rules").join("agent-ready.md"))?;
+            instrucciones(&mut v, d.join("rules").join("verify-seo.md"))?;
             orden(&mut v, d.join("commands"), Formato::Md(true));
         }
         otro => return Err(format!("unknown agent «{otro}»: claude, {}", AGENTES.join(", "))),
@@ -283,7 +283,7 @@ pub fn aplicar(cambios: &[Cambio]) -> Result<(), String> {
         }
         if c.fichero.exists() {
             let nombre = c.fichero.file_name().unwrap_or_default().to_string_lossy();
-            let copia = c.fichero.with_file_name(format!("{nombre}.before-agent-ready"));
+            let copia = c.fichero.with_file_name(format!("{nombre}.before-verify-seo"));
             if !copia.exists() {
                 std::fs::copy(&c.fichero, &copia).map_err(error)?;
             }
@@ -300,12 +300,12 @@ mod tests {
     /// One test, as it sets a variable for the whole process.
     #[test]
     fn every_agent_gets_set_up_once_and_keeps_what_was_there() {
-        let casa = std::env::temp_dir().join(format!("agent-ready-setup-test-{}", std::process::id()));
+        let casa = std::env::temp_dir().join(format!("verify-seo-setup-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&casa);
         std::fs::create_dir_all(casa.join(".gemini")).unwrap();
         std::fs::write(casa.join(".gemini").join("settings.json"), r#"{"theme": "dark", "mcpServers": {"other": {"command": "x"}}}"#).unwrap();
         // SAFETY: no other test reads or writes the environment.
-        unsafe { std::env::set_var("AGENT_READY_SETUP_HOME", &casa) };
+        unsafe { std::env::set_var("VERIFY_SEO_SETUP_HOME", &casa) };
 
         for agente in AGENTES {
             let cambios = plan(agente).unwrap();
@@ -317,10 +317,10 @@ mod tests {
         let gemini: Value = serde_json::from_str(&std::fs::read_to_string(casa.join(".gemini").join("settings.json")).unwrap()).unwrap();
         assert_eq!(gemini["theme"], "dark");
         assert_eq!(gemini["mcpServers"]["other"]["command"], "x");
-        assert_eq!(gemini["mcpServers"]["agent-ready"]["args"][0], "mcp");
-        assert!(casa.join(".gemini").join("settings.json.before-agent-ready").exists());
+        assert_eq!(gemini["mcpServers"]["verify-seo"]["args"][0], "mcp");
+        assert!(casa.join(".gemini").join("settings.json.before-verify-seo").exists());
         let codex = std::fs::read_to_string(casa.join(".codex").join("config.toml")).unwrap();
-        assert!(codex.contains("[mcp_servers.agent-ready]"));
+        assert!(codex.contains("[mcp_servers.verify-seo]"));
         assert!(plan("nope").is_err());
 
         let _ = std::fs::remove_dir_all(&casa);

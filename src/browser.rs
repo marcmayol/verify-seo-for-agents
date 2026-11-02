@@ -16,7 +16,7 @@ const POLL: Duration = Duration::from_millis(500);
 
 const SHIM: &str = r#"(() => {
   const tools = [];
-  window.__agentReadyTools = tools;
+  window.__verifySeoTools = tools;
   const add = (t) => { if (t && t.name) tools.push({ name: String(t.name), description: t.description ? String(t.description) : "", hasSchema: !!t.inputSchema }); };
   const mc = {
     registerTool(t) { add(t); return Promise.resolve(); },
@@ -33,7 +33,7 @@ const SHIM: &str = r#"(() => {
 })()"#;
 
 const READ_TOOLS: &str = r#"JSON.stringify({
-  imperative: window.__agentReadyTools || [],
+  imperative: window.__verifySeoTools || [],
   declarative: [...document.querySelectorAll("form[toolname]")].map(f => ({ name: f.getAttribute("toolname"), description: f.getAttribute("tooldescription") || "", hasSchema: false })),
 })"#;
 
@@ -51,7 +51,7 @@ pub enum Outcome {
 
 fn candidates() -> Vec<PathBuf> {
     let mut out = Vec::new();
-    if let Ok(p) = std::env::var("AGENT_READY_BROWSER") {
+    if let Ok(p) = std::env::var("VERIFY_SEO_BROWSER") {
         return vec![PathBuf::from(p)];
     }
     if cfg!(windows) {
@@ -133,7 +133,7 @@ fn sweep_old_profiles() {
     let Ok(dir) = std::fs::read_dir(std::env::temp_dir()) else { return };
     for entry in dir.flatten() {
         let stale = entry.metadata().and_then(|m| m.modified()).ok().and_then(|t| t.elapsed().ok()).is_some_and(|age| age > Duration::from_secs(3600));
-        if stale && entry.file_name().to_string_lossy().starts_with("agent-ready-") {
+        if stale && entry.file_name().to_string_lossy().starts_with("verify-seo-") {
             let _ = std::fs::remove_dir_all(entry.path());
         }
     }
@@ -141,7 +141,7 @@ fn sweep_old_profiles() {
 
 fn start(exe: &PathBuf) -> Result<Session, String> {
     sweep_old_profiles();
-    let profile =std::env::temp_dir().join(format!("agent-ready-{}-{:?}", std::process::id(), std::thread::current().id()).replace(['(', ')'], ""));
+    let profile =std::env::temp_dir().join(format!("verify-seo-{}-{:?}", std::process::id(), std::thread::current().id()).replace(['(', ')'], ""));
     let mut child = Command::new(exe)
         .args(["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", "--disable-extensions", "--remote-debugging-port=0"])
         .arg(format!("--user-data-dir={}", profile.display()))

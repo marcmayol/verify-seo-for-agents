@@ -57,12 +57,12 @@ fn call_tool(params: &Value) -> Value {
     }
 }
 
-/// `agent-ready tool`: the tools as JSON, for the Claude Code module to register.
+/// `verify-seo tool`: the tools as JSON, for the Claude Code module to register.
 pub fn list_tools() -> Value {
     json!({"tools": [tool_schema(), guide_schema()]})
 }
 
-/// `agent-ready tool <name>`: runs one with its arguments, answering as the MCP server does.
+/// `verify-seo tool <name>`: runs one with its arguments, answering as the MCP server does.
 pub fn run_tool(name: &str, arguments: Value) -> Result<String, String> {
     let result = call_tool(&json!({"name": name, "arguments": arguments}));
     let text = result["content"][0]["text"].as_str().unwrap_or("").to_string();
@@ -79,7 +79,7 @@ pub fn handle(msg: &Value) -> Option<Value> {
             json!({
                 "protocolVersion": version,
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "agent-ready", "version": env!("CARGO_PKG_VERSION")},
+                "serverInfo": {"name": "verify-seo", "version": env!("CARGO_PKG_VERSION")},
             })
         }
         "ping" => json!({}),

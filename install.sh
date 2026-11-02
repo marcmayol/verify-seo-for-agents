@@ -1,17 +1,17 @@
 #!/bin/sh
-# Installs agent-ready on Linux or macOS and gets ready every agent it finds. Nothing else is needed:
+# Installs verify-seo on Linux or macOS and gets ready every agent it finds. Nothing else is needed:
 # the binary depends on no runtime or library.
-#   curl -fsSL https://raw.githubusercontent.com/marcmayol/agent-ready/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/marcmayol/verify-seo-for-agents/main/install.sh | sh
 #
 # Optional variables:
-#   AGENT_READY_INSTALL_DIR   where the binary goes (default ~/.local/bin)
-#   AGENT_READY_VERSION       a specific release tag (default below)
-#   AGENT_READY_NO_SETUP=1    only install the binary, don't touch any agent
+#   VERIFY_SEO_INSTALL_DIR   where the binary goes (default ~/.local/bin)
+#   VERIFY_SEO_VERSION       a specific release tag (default below)
+#   VERIFY_SEO_NO_SETUP=1    only install the binary, don't touch any agent
 set -eu
 
-repo="marcmayol/agent-ready"
-tag="${AGENT_READY_VERSION:-v0.1.0}"
-dir="${AGENT_READY_INSTALL_DIR:-$HOME/.local/bin}"
+repo="marcmayol/verify-seo-for-agents"
+tag="${VERIFY_SEO_VERSION:-v0.1.1}"
+dir="${VERIFY_SEO_INSTALL_DIR:-$HOME/.local/bin}"
 base="https://github.com/$repo/releases/download/$tag"
 
 case "$(uname -s)-$(uname -m)" in
@@ -20,14 +20,14 @@ case "$(uname -s)-$(uname -m)" in
   Darwin-arm64) target=aarch64-apple-darwin ;;
   Darwin-x86_64) target=x86_64-apple-darwin ;;
   *)
-    echo "agent-ready: no prebuilt binary for $(uname -s) $(uname -m); build it with: cargo install --git https://github.com/$repo" >&2
+    echo "verify-seo: no prebuilt binary for $(uname -s) $(uname -m); build it with: cargo install --git https://github.com/$repo" >&2
     exit 1
     ;;
 esac
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-paquete="agent-ready-$target.tar.gz"
+paquete="verify-seo-$target.tar.gz"
 echo "Downloading $paquete..."
 curl -fsSL "$base/$paquete" -o "$tmp/$paquete"
 curl -fsSL "$base/SHA256SUMS" -o "$tmp/SHA256SUMS"
@@ -40,22 +40,22 @@ else
   real="$(shasum -a 256 "$tmp/$paquete" | cut -d' ' -f1)"
 fi
 if [ -z "$esperada" ] || [ "$esperada" != "$real" ]; then
-  echo "agent-ready: the SHA-256 checksum of $paquete doesn't match; nothing was installed." >&2
+  echo "verify-seo: the SHA-256 checksum of $paquete doesn't match; nothing was installed." >&2
   exit 1
 fi
 
 tar -xzf "$tmp/$paquete" -C "$tmp"
 mkdir -p "$dir"
-mv "$tmp/agent-ready" "$dir/agent-ready"
-chmod +x "$dir/agent-ready"
-echo "Installed: $dir/agent-ready ($("$dir/agent-ready" --version))"
+mv "$tmp/verify-seo" "$dir/verify-seo"
+chmod +x "$dir/verify-seo"
+echo "Installed: $dir/verify-seo ($("$dir/verify-seo" --version))"
 
-if [ -n "${AGENT_READY_NO_SETUP:-}" ]; then
-  echo "Next: $dir/agent-ready setup <agent>   (or --all, for every agent on this computer)"
+if [ -n "${VERIFY_SEO_NO_SETUP:-}" ]; then
+  echo "Next: $dir/verify-seo setup <agent>   (or --all, for every agent on this computer)"
   exit 0
 fi
 # The agents get the binary's full path, so they find it even if this folder isn't in PATH.
-if ! "$dir/agent-ready" setup --all; then
-  echo "agent-ready: some agents couldn't be set up (see above); the others are ready." >&2
+if ! "$dir/verify-seo" setup --all; then
+  echo "verify-seo: some agents couldn't be set up (see above); the others are ready." >&2
 fi
-echo "An agent you install later: $dir/agent-ready setup <agent>"
+echo "An agent you install later: $dir/verify-seo setup <agent>"

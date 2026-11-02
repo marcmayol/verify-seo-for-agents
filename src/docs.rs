@@ -40,7 +40,7 @@ pub fn guide(m: &Meta) -> String {
     let body = GUIDES.iter().find(|(k, _)| *k == m.key).map_or("", |(_, b)| b).trim_end();
     let specs: String = m.specs.iter().map(|s| format!("- {s}\n")).collect();
     format!(
-        "{body}\n\n## Check it\n\n```sh\nagent-ready scan https://your-site --json --checks {key}\n```\n\nLook at `checks.{cat}.{key}.status`.\n\n## Specification\n\n{specs}",
+        "{body}\n\n## Check it\n\n```sh\nverify-seo scan https://your-site --json --checks {key}\n```\n\nLook at `checks.{cat}.{key}.status`.\n\n## Specification\n\n{specs}",
         key = m.key,
         cat = m.category,
     )
@@ -85,7 +85,7 @@ pub fn skills_index() -> Value {
 }
 
 pub fn llms() -> String {
-    let mut out = String::from("# agent-ready\n\n> Checks whether a website is ready for AI agents: 23 checks, a level from 0 to 5, and how to fix each failure.\n\n");
+    let mut out = String::from("# verify-seo-for-agents\n\n> Checks whether a website is ready for AI agents: 23 checks, a level from 0 to 5, and how to fix each failure.\n\n");
     out.push_str("Scan with `POST /api/scan` and `{\"url\": \"https://example.com\"}`, add `\"format\": \"agent\"` for Markdown with what to fix, or use the MCP server at `POST /mcp`.\n\n## Docs\n\n");
     out.push_str("- [Full documentation](/llms-full.txt): every check, in one file\n- [Skills index](/.well-known/agent-skills/index.json)\n\n## Checks\n\n");
     for m in &CHECKS {

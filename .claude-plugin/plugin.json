@@ -1,14 +1,14 @@
 {
-  "name": "agent-ready",
-  "displayName": "agent-ready",
-  "version": "0.1.0",
-  "description": "Check whether a website is ready for AI agents, and fix what fails: 23 checks, a level from 0 to 5 and a guide for each failure. Runs on your machine and can scan localhost. Installing the plugin is all: it downloads the binary on first use.",
+  "name": "verify-seo-for-agents",
+  "displayName": "verify-seo-for-agents",
+  "version": "0.1.1",
+  "description": "Check whether a website is ready for AI agents, and fix what fails: 23 checks, a level from 0 to 5 and a guide for each failure. Runs on your machine and can scan localhost. Installing the plugin is all: it downloads the verify-seo binary on first use.",
   "author": {
     "name": "Marc Mayol",
     "url": "https://github.com/marcmayol"
   },
-  "homepage": "https://github.com/marcmayol/agent-ready",
-  "repository": "https://github.com/marcmayol/agent-ready",
+  "homepage": "https://github.com/marcmayol/verify-seo-for-agents",
+  "repository": "https://github.com/marcmayol/verify-seo-for-agents",
   "license": "MIT",
   "keywords": ["agents", "mcp", "robots.txt", "llms", "seo", "mod"]
 }

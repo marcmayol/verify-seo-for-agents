@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BIN = sys.argv[1] if len(sys.argv) > 1 else os.path.join(BASE, "target", "release", "agent-ready.exe")
+BIN = sys.argv[1] if len(sys.argv) > 1 else os.path.join(BASE, "target", "release", "verify-seo.exe")
 sys.stdout.reconfigure(encoding="utf-8")
 
 total = iguales = 0

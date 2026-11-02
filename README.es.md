@@ -1,4 +1,6 @@
-# agent-ready
+# verify-seo-for-agents
+
+El comando es `verify-seo`.
 
 [English](README.md)
 
@@ -14,39 +16,39 @@ Es una herramienta independiente que sigue el método público de [isitagentread
 
 ```
 /plugin marketplace add marcmayol/drac-plugins
-/plugin install agent-ready@drac
+/plugin install verify-seo-for-agents@drac
 ```
 
 **Otros agentes, o solo el comando.** Esto instala el binario y prepara todos los agentes que encuentre en tu ordenador: Codex, Gemini CLI, Cursor, OpenCode, Qwen Code, Kiro, Copilot CLI, Windsurf, Antigravity, Kimi Code, Pi, Amp, Kilo Code y Grok.
 
 ```sh
 # Linux y macOS
-curl -fsSL https://raw.githubusercontent.com/marcmayol/agent-ready/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/marcmayol/verify-seo-for-agents/main/install.sh | sh
 ```
 
 ```powershell
 # Windows
-irm https://raw.githubusercontent.com/marcmayol/agent-ready/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/marcmayol/verify-seo-for-agents/main/install.ps1 | iex
 ```
 
-Para un agente que instales más tarde: `agent-ready setup <agente>`. Cada fichero que toca guarda una copia `.before-agent-ready`.
+Para un agente que instales más tarde: `verify-seo setup <agente>`. Cada fichero que toca guarda una copia `.before-verify-seo`.
 
 ## Usar
 
-En tu agente, pídelo con tus palabras o escribe `/agent-ready https://example.com`. Escanea la web y, si estás en su código, se ofrece a arreglar lo que falla.
+En tu agente, pídelo con tus palabras o escribe `/verify-seo https://example.com`. Escanea la web y, si estás en su código, se ofrece a arreglar lo que falla.
 
 En la terminal:
 
 ```
-agent-ready scan example.com                 # resumen
-agent-ready scan localhost:3000              # tu web antes de publicarla
-agent-ready scan example.com --json          # informe completo
-agent-ready scan example.com --agent         # Markdown con lo que hay que arreglar
-agent-ready scan example.com --profile content
-agent-ready scan example.com --min-level 3   # sale con 2 por debajo de ese nivel, para CI
-agent-ready guide mcpServerCard              # cómo aprobar una comprobación
-agent-ready docs                             # toda la documentación
-agent-ready serve                            # interfaz web en http://127.0.0.1:8787
+verify-seo scan example.com                 # resumen
+verify-seo scan localhost:3000              # tu web antes de publicarla
+verify-seo scan example.com --json          # informe completo
+verify-seo scan example.com --agent         # Markdown con lo que hay que arreglar
+verify-seo scan example.com --profile content
+verify-seo scan example.com --min-level 3   # sale con 2 por debajo de ese nivel, para CI
+verify-seo guide mcpServerCard              # cómo aprobar una comprobación
+verify-seo docs                             # toda la documentación
+verify-seo serve                            # interfaz web en http://127.0.0.1:8787
 ```
 
 Perfiles: `all`, `content` para un blog o documentación, y `apiApp` para una API o aplicación web.
@@ -67,7 +69,7 @@ Cada comprobación tiene una guía en `guides/` (en inglés) con lo que busca, u
 
 ## Qué necesita
 
-Nada para escanear, salvo en una comprobación: WebMCP ejecuta la página, así que necesita Chrome, Edge, Brave o Chromium. Sin ninguno sigue encontrando las herramientas declaradas en el HTML, y si no las hay responde `unableToCheck`. Con `AGENT_READY_BROWSER` eliges el navegador.
+Nada para escanear, salvo en una comprobación: WebMCP ejecuta la página, así que necesita Chrome, Edge, Brave o Chromium. Sin ninguno sigue encontrando las herramientas declaradas en el HTML, y si no las hay responde `unableToCheck`. Con `VERIFY_SEO_BROWSER` eliges el navegador.
 
 DNS-AID y ARD preguntan al resolutor DNS-over-HTTPS de Cloudflare, y al de Google si ese falla. Aparte de eso, de tu ordenador solo salen las peticiones a la web que escaneas.
 

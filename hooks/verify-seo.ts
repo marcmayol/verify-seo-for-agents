@@ -1,12 +1,12 @@
-// agent-ready as a Claude Code mod. Installing the plugin is the whole setup: on the first session this
+// verify-seo-for-agents as a Claude Code mod. Installing the plugin is the whole setup: on the first session this
 // module downloads the binary that matches the plugin's version (checking its SHA-256) into
-// ~/.agent-ready/bin. It serves the tools by running `agent-ready tool <name>`, which answers exactly as
+// ~/.verify-seo/bin. It serves the tools by running `verify-seo tool <name>`, which answers exactly as
 // the MCP server does. No shell is involved anywhere, so it works the same on Windows, macOS and Linux.
 import type { Register } from 'claude-code'
 
-const REPO = 'marcmayol/agent-ready'
+const REPO = 'marcmayol/verify-seo-for-agents'
 
-// What `/agent-ready` asks the agent to do. The other agents' command has the same text (src/setup.rs).
+// What `/verify-seo` asks the agent to do. The other agents' command has the same text (src/setup.rs).
 const SCAN = 'Scan the site the user wrote after this command with the `scan_site` tool. If they gave none, use the site of the current project, running it locally if that is how it works. Report the level, the score and what is missing for the next level. If the project is the site\'s source code, offer to fix those checks: read `get_fix_guide` for each, apply it, and scan again to confirm. Skip the checks that make no sense for this site, such as a payment protocol on a site that sells nothing, and say why.'
 
 // A scan runs a browser for one of its checks, so it can take a while.
@@ -18,23 +18,23 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const bin = await ready($)
     if (bin !== undefined) await registerTools($, bin)
-    await $.command.register({ name: 'agent-ready', description: 'Check whether a website is ready for AI agents, and fix what fails', argumentHint: '[url]' })
+    await $.command.register({ name: 'verify-seo', description: 'Check whether a website is ready for AI agents, and fix what fails', argumentHint: '[url]' })
     return next(e)
   })
 
   // A command.run hook can't submit a prompt itself (it would wait on its own turn), so a timer does it
   // right after; the prompt runs as a turn of its own once the session is idle.
-  on('command.run', { command: 'agent-ready' }, ($, e) => {
+  on('command.run', { command: 'verify-seo' }, ($, e) => {
     const lo = e.args.trim()
     const text = lo === '' ? SCAN : `${SCAN}\n\nWhat the user wrote after the command: ${lo}`
     $.clock.after(0, () => {
       void $.prompt.submit({ text }).catch(() => {})
     })
-    return { text: 'agent-ready: scanning.' }
+    return { text: 'verify-seo: scanning.' }
   })
 
-  on('tool.call', { tool: 'mcp__agent-ready__scan_site' }, ($, e) => runTool($, 'scan_site', e))
-  on('tool.call', { tool: 'mcp__agent-ready__get_fix_guide' }, ($, e) => runTool($, 'get_fix_guide', e))
+  on('tool.call', { tool: 'mcp__verify-seo-for-agents__scan_site' }, ($, e) => runTool($, 'scan_site', e))
+  on('tool.call', { tool: 'mcp__verify-seo-for-agents__get_fix_guide' }, ($, e) => runTool($, 'get_fix_guide', e))
 }
 
 // Whichever hook comes first starts the preparation; the others wait for the same one.
@@ -50,22 +50,22 @@ async function prepare($: any): Promise<string | undefined> {
     const version: string = manifiesto.version
     const windows = (await $.env.get('OS')) === 'Windows_NT'
     const home = (windows ? await $.env.get('USERPROFILE') : await $.env.get('HOME')) ?? ''
-    const carpeta = home + '/.agent-ready/bin'
-    const propio = carpeta + (windows ? '/agent-ready.exe' : '/agent-ready')
+    const carpeta = home + '/.verify-seo/bin'
+    const propio = carpeta + (windows ? '/verify-seo.exe' : '/verify-seo')
 
-    const elegido = (await $.env.get('AGENT_READY_BIN')) ?? undefined
+    const elegido = (await $.env.get('VERIFY_SEO_BIN')) ?? undefined
     if (elegido !== undefined) return elegido
-    for (const c of [propio, 'agent-ready']) {
+    for (const c of [propio, 'verify-seo']) {
       if ((await versionOf($, c)) === version) return c
     }
 
-    $.ui.toast(`agent-ready: installing ${version}…`)
+    $.ui.toast(`verify-seo: installing ${version}…`)
     await install($, version, windows, carpeta)
     if ((await versionOf($, propio)) !== version) throw new Error(`the installed binary isn't ${version}`)
-    $.ui.toast(`agent-ready: ${version} installed`)
+    $.ui.toast(`verify-seo: ${version} installed`)
     return propio
   } catch (err) {
-    $.ui.toast(`agent-ready couldn't start: ${String((err as Error)?.message ?? err).slice(0, 200)}`, { timeoutMs: 15_000 })
+    $.ui.toast(`verify-seo couldn't start: ${String((err as Error)?.message ?? err).slice(0, 200)}`, { timeoutMs: 15_000 })
     return undefined
   }
 }
@@ -97,7 +97,7 @@ async function install($: any, version: string, windows: boolean, carpeta: strin
     destino = tabla[`${so} ${maquina}`]
     if (destino === undefined) throw new Error(`no prebuilt binary for ${so} ${maquina}; build it with: cargo install --git https://github.com/${REPO}`)
   }
-  const paquete = `agent-ready-${destino}.${windows ? 'zip' : 'tar.gz'}`
+  const paquete = `verify-seo-${destino}.${windows ? 'zip' : 'tar.gz'}`
   const base = `https://github.com/${REPO}/releases/download/v${version}`
 
   const sumas = await $.http.fetch(`${base}/SHA256SUMS`)
@@ -153,7 +153,7 @@ async function remove($: any, archivo: string, windows: boolean): Promise<void> 
   }
 }
 
-// Registers the tools as `agent-ready tool` lists them, so names, descriptions and schemas have one source.
+// Registers the tools as `verify-seo tool` lists them, so names, descriptions and schemas have one source.
 async function registerTools($: any, bin: string): Promise<void> {
   const r = await $.process.run([bin, 'tool'])
   for (const t of JSON.parse(r.stdout).tools) {
@@ -163,7 +163,7 @@ async function registerTools($: any, bin: string): Promise<void> {
 
 async function runTool($: any, nombre: string, e: any) {
   const bin = await ready($)
-  if (bin === undefined) return { deny: 'agent-ready is not ready: its binary could not be installed. See the toast at session start.' }
+  if (bin === undefined) return { deny: 'verify-seo is not ready: its binary could not be installed. See the toast at session start.' }
   const { tool, tool_use_id, agentId, ...args } = e
   const r = await $.process.run([bin, 'tool', nombre], { stdin: JSON.stringify(args), timeoutMs: TOOL_TIMEOUT_MS })
   const texto = (r.stdout.trim() || r.stderr.trim() || '(no output)') as string
