@@ -9,8 +9,8 @@ macro_rules! guides {
     ($($key:literal),* $(,)?) => { [$(($key, include_str!(concat!("../guides/", $key, ".md")))),*] };
 }
 
-const GUIDES: [(&str, &str); 23] = guides![
-    "robotsTxt", "sitemap", "linkHeaders", "dnsAid", "markdownNegotiation", "robotsTxtAiRules", "contentSignals",
+const GUIDES: [(&str, &str); 25] = guides![
+    "robotsTxt", "sitemap", "linkHeaders", "dnsAid", "markdownNegotiation", "llmsTxt", "llmsFullTxt", "robotsTxtAiRules", "contentSignals",
     "webBotAuth", "apiCatalog", "oauthDiscovery", "oauthProtectedResource", "authMd", "mcpServerCard", "a2aAgentCard",
     "agentSkills", "webMcp", "ard", "personalAgentProtocol", "x402", "mpp", "ucp", "acp", "ap2",
 ];
@@ -85,7 +85,7 @@ pub fn skills_index() -> Value {
 }
 
 pub fn llms() -> String {
-    let mut out = String::from("# verify-seo-for-agents\n\n> Checks whether a website is ready for AI agents: 23 checks, a level from 0 to 5, and how to fix each failure.\n\n");
+    let mut out = String::from("# verify-seo-for-agents\n\n> Checks whether a website is ready for AI agents: 23 checks plus 2 optional ones, a level from 0 to 5, and how to fix each failure.\n\n");
     out.push_str("Scan with `POST /api/scan` and `{\"url\": \"https://example.com\"}`, add `\"format\": \"agent\"` for Markdown with what to fix, or use the MCP server at `POST /mcp`.\n\n## Docs\n\n");
     out.push_str("- [Full documentation](/llms-full.txt): every check, in one file\n- [Skills index](/.well-known/agent-skills/index.json)\n\n## Checks\n\n");
     for m in &CHECKS {
@@ -150,7 +150,7 @@ mod tests {
     fn the_index_digests_what_is_served() {
         let index = skills_index();
         let skills = index["skills"].as_array().unwrap();
-        assert_eq!(skills.len(), 24);
+        assert_eq!(skills.len(), 26);
         for s in skills {
             let name = s["name"].as_str().unwrap();
             let body = skill_md(name).unwrap();

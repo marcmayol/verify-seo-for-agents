@@ -1,6 +1,6 @@
 [package]
 name = "verify-seo-for-agents"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 description = "Check whether a website is ready for AI agents: a local scanner with a CLI, a web UI, an API and an MCP server."
 license = "MIT"

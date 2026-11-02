@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- New optional checks and guides for `llms.txt` and `llms-full.txt`. They run only when asked for by name, and never change the level or the percentage.
+- WebMCP: a declared form with fields now reports that it has a schema, and a tool seen both ways counts once.
+- `scan_site` takes `enabledChecks`.
+
 ## 0.1.1
 
 Renamed from agent-ready. The project is now verify-seo-for-agents, and the command, the MCP server and the slash command are now `verify-seo`, `verify-seo` and `/verify-seo`. Nothing else changes. If you installed 0.1.0, uninstall it first and remove its `agent-ready` block from your agents' configuration.

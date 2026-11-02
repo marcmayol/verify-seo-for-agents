@@ -58,7 +58,7 @@ Profiles: `all`, `content` for a blog or documentation, and `apiApp` for an API 
 | Category | Checks |
 |---|---|
 | Discoverability | robots.txt, sitemap, Link headers, DNS-AID |
-| Content | Markdown negotiation |
+| Content | Markdown negotiation. Optional, on request: `llms.txt` and `llms-full.txt` |
 | Bot access | AI bot rules, Content Signals, Web Bot Auth |
 | Discovery | API catalog, OAuth discovery, OAuth Protected Resource, Auth.md, MCP Server Card, A2A Agent Card, Agent Skills, WebMCP, ARD, Personal Agent Protocol |
 | Commerce | x402, MPP, UCP, ACP, AP2. They only count on sites detected as stores |
@@ -83,6 +83,7 @@ A scan loads the page in your browser's sandbox, with a throwaway profile that i
 
 - A site listed only in the x402 Bazaar directory is not detected: that lookup depends on a third party.
 - The MCP check validates the card and does not probe the endpoint.
+- `llms.txt` and `llms-full.txt` are extras of this tool, as the original no longer checks them. They are off by default: `verify-seo scan example.com --checks llmsTxt,llmsFullTxt`.
 - The original's rules were worked out from its answers, since its published method is less precise than its behaviour. This tool follows the behaviour. Which homepages count as a store, and what Auth.md needs without OAuth metadata, are the least certain, and DNS-AID has only been tested against the DNS answer format, as no compared site publishes it.
 
 ## Development

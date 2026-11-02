@@ -398,6 +398,38 @@ pub fn markdown_negotiation(c: &Ctx) -> Out {
     t.fail("Site does not support Markdown for Agents")
 }
 
+/// A file of the llms.txt family: real text with an H1, not an app shell answering every path.
+fn is_llms_file(r: &Resp) -> bool {
+    let text = r.text();
+    r.ok() && !r.is_html() && !looks_like_html(&text) && text.lines().any(|l| l.starts_with("# "))
+}
+
+pub fn llms_txt(c: &Ctx) -> Out {
+    let mut t = Trace::default();
+    let r = c.get_path(&mut t, "/llms.txt", None);
+    if !r.ok() || r.is_html() {
+        return t.fail("llms.txt not found");
+    }
+    if !is_llms_file(&r) {
+        return t.fail("llms.txt has no H1 title");
+    }
+    let text = r.text();
+    let links = text.lines().filter(|l| l.trim_start().starts_with("- [")).count();
+    t.pass("llms.txt found", json!({"links": links, "hasSummary": text.lines().any(|l| l.starts_with("> "))}))
+}
+
+pub fn llms_full_txt(c: &Ctx) -> Out {
+    let mut t = Trace::default();
+    let r = c.get_path(&mut t, "/llms-full.txt", None);
+    if !r.ok() || r.is_html() {
+        return t.fail("llms-full.txt not found");
+    }
+    if !is_llms_file(&r) {
+        return t.fail("llms-full.txt has no H1 title");
+    }
+    t.pass("llms-full.txt found", json!({"bytes": r.body.len()}))
+}
+
 pub fn ai_rules(c: &Ctx) -> Out {
     let mut t = Trace::default();
     t.fetch(&c.url("/robots.txt"), &c.robots);
@@ -760,7 +792,13 @@ pub fn web_mcp(c: &Ctx) -> Out {
                     return t.fail("No WebMCP tools detected on page load");
                 }
             };
-            let tools: Vec<Value> = found.imperative.into_iter().chain(found.declarative).collect();
+            // A browser with WebMCP also lists declared forms as tools: each counts once.
+            let mut tools: Vec<Value> = found.imperative;
+            for form in found.declarative {
+                if !tools.iter().any(|x| x["name"] == form["name"]) {
+                    tools.push(form);
+                }
+            }
             let names: Vec<&str> = tools.iter().filter_map(|x| x["name"].as_str()).collect();
             t.pass(
                 format!("Found {} WebMCP tool(s): {}", tools.len(), names.join(", ")),
@@ -936,6 +974,19 @@ mod tests {
         assert_eq!(svcb_priority("0 target.example."), Some(0));
         assert_eq!(svcb_priority("\\# 12 00 01 00 00"), Some(1));
         assert_eq!(svcb_priority("\\# 4 00 00 00 00"), Some(0));
+    }
+
+    fn respuesta(status: u16, tipo: &str, cuerpo: &str) -> Resp {
+        Resp { status, headers: vec![("content-type".into(), tipo.into())], body: cuerpo.as_bytes().to_vec(), ..Default::default() }
+    }
+
+    #[test]
+    fn an_llms_file_needs_a_title_and_cannot_be_a_page() {
+        assert!(is_llms_file(&respuesta(200, "text/plain", "# Site\n\n> Summary")));
+        assert!(!is_llms_file(&respuesta(200, "text/plain", "Just some words")));
+        assert!(!is_llms_file(&respuesta(200, "text/html", "# Site")));
+        assert!(!is_llms_file(&respuesta(200, "text/plain", "<!DOCTYPE html>\n# Site")));
+        assert!(!is_llms_file(&respuesta(404, "text/plain", "# Not found")));
     }
 
     #[test]

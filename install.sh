@@ -10,7 +10,7 @@
 set -eu
 
 repo="marcmayol/verify-seo-for-agents"
-tag="${VERIFY_SEO_VERSION:-v0.1.1}"
+tag="${VERIFY_SEO_VERSION:-v0.1.2}"
 dir="${VERIFY_SEO_INSTALL_DIR:-$HOME/.local/bin}"
 base="https://github.com/$repo/releases/download/$tag"
 

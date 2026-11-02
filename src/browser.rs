@@ -34,7 +34,7 @@ const SHIM: &str = r#"(() => {
 
 const READ_TOOLS: &str = r#"JSON.stringify({
   imperative: window.__verifySeoTools || [],
-  declarative: [...document.querySelectorAll("form[toolname]")].map(f => ({ name: f.getAttribute("toolname"), description: f.getAttribute("tooldescription") || "", hasSchema: false })),
+  declarative: [...document.querySelectorAll("form[toolname]")].map(f => ({ name: f.getAttribute("toolname"), description: f.getAttribute("tooldescription") || "", hasSchema: !!f.querySelector("input[name],select[name],textarea[name]") })),
 })"#;
 
 pub struct Found {

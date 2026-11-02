@@ -58,7 +58,7 @@ Perfiles: `all`, `content` para un blog o documentación, y `apiApp` para una AP
 | Categoría | Comprobaciones |
 |---|---|
 | Descubrimiento básico | robots.txt, sitemap, cabeceras Link, DNS-AID |
-| Contenido | Negociación de Markdown |
+| Contenido | Negociación de Markdown. Opcionales, si se piden: `llms.txt` y `llms-full.txt` |
 | Acceso de bots | Reglas para bots de IA, Content Signals, Web Bot Auth |
 | Descubrimiento de servicios | Catálogo de API, OAuth discovery, OAuth Protected Resource, Auth.md, MCP Server Card, A2A Agent Card, Agent Skills, WebMCP, ARD, Personal Agent Protocol |
 | Comercio | x402, MPP, UCP, ACP, AP2. Solo cuentan en webs detectadas como tiendas |
@@ -83,6 +83,7 @@ El escaneo carga la página en el sandbox de tu navegador, con un perfil tempora
 
 - Una web que solo aparece en el directorio x402 Bazaar no se detecta: esa consulta depende de un tercero.
 - La comprobación de MCP valida la tarjeta y no prueba el endpoint.
+- `llms.txt` y `llms-full.txt` son extras de esta herramienta, porque el original ya no las comprueba. Van apagadas por defecto: `verify-seo scan example.com --checks llmsTxt,llmsFullTxt`.
 - Las reglas del original se dedujeron de sus respuestas, porque su método publicado es menos preciso que su comportamiento, y esta herramienta sigue el comportamiento. Lo menos seguro es qué portadas cuentan como tienda y qué necesita Auth.md sin metadatos OAuth. DNS-AID solo se ha probado contra el formato de respuesta DNS, porque ninguna web comparada lo publica.
 
 ## Desarrollo

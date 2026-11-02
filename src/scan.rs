@@ -3,7 +3,7 @@
 use crate::checks::{self as ck, Ctx, Out, Status};
 use crate::docs;
 use crate::http::Http;
-use crate::meta::{self, CATEGORIES, CHECKS, INFORMATIONAL, OPT_IN};
+use crate::meta::{self, CATEGORIES, CHECKS, INFORMATIONAL, ONLY_WHEN_ASKED, OPT_IN};
 use regex::Regex;
 use serde_json::{Map, Value, json};
 use std::collections::{HashMap, HashSet};
@@ -23,6 +23,8 @@ fn runner(key: &str) -> CheckFn {
         "linkHeaders" => ck::link_headers,
         "dnsAid" => ck::dns_aid,
         "markdownNegotiation" => ck::markdown_negotiation,
+        "llmsTxt" => ck::llms_txt,
+        "llmsFullTxt" => ck::llms_full_txt,
         "robotsTxtAiRules" => ck::ai_rules,
         "contentSignals" => ck::content_signals,
         "webBotAuth" => ck::web_bot_auth,
@@ -84,7 +86,7 @@ pub fn select(profile: Option<&str>, enabled: Option<Vec<String>>) -> Result<(Ve
         return Ok((keys, asked));
     }
     let keys: Vec<&'static str> = match profile.unwrap_or("all") {
-        "all" => CHECKS.iter().map(|m| m.key).collect(),
+        "all" => CHECKS.iter().map(|m| m.key).filter(|k| !ONLY_WHEN_ASKED.contains(k)).collect(),
         "content" => meta::PROFILE_CONTENT.to_vec(),
         "apiApp" => meta::PROFILE_API.to_vec(),
         other => return Err(format!("Unknown profile: {other} (use all, content or apiApp)")),
@@ -393,5 +395,7 @@ mod tests {
         assert!(select(None, Some(vec![])).is_err());
         assert_eq!(select(Some("content"), None).unwrap().0.len(), 7);
         assert_eq!(select(None, None).unwrap().0.len(), 23);
+        assert!(!select(None, None).unwrap().0.contains(&"llmsTxt"));
+        assert_eq!(select(None, Some(vec!["llmsTxt".into()])).unwrap().0, ["llmsTxt"]);
     }
 }

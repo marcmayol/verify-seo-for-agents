@@ -17,7 +17,9 @@ pub const CATEGORIES: [(&str, &str); 5] = [
 ];
 
 /// Reported, but never counted in the percentage.
-pub const INFORMATIONAL: [&str; 1] = ["personalAgentProtocol"];
+pub const INFORMATIONAL: [&str; 3] = ["personalAgentProtocol", "llmsTxt", "llmsFullTxt"];
+/// Extras: they run only when asked for by name, so the default report keeps to the 23 checks.
+pub const ONLY_WHEN_ASKED: [&str; 2] = ["llmsTxt", "llmsFullTxt"];
 /// Opt-in: they only count in the percentage when asked for by name.
 pub const OPT_IN: [&str; 2] = ["a2aAgentCard", "ap2"];
 
@@ -29,7 +31,7 @@ pub const PROFILE_API: [&str; 17] = [
     "webMcp", "ard", "personalAgentProtocol",
 ];
 
-pub const CHECKS: [Meta; 23] = [
+pub const CHECKS: [Meta; 25] = [
     Meta {
         key: "robotsTxt",
         category: "discoverability",
@@ -64,6 +66,20 @@ pub const CHECKS: [Meta; 23] = [
         title: "Markdown negotiation",
         fix: "Answer requests with Accept: text/markdown with a Markdown version of the page and Content-Type: text/markdown. Browsers keep getting HTML.",
         specs: &["https://developers.cloudflare.com/fundamentals/reference/markdown-for-agents/"],
+    },
+    Meta {
+        key: "llmsTxt",
+        category: "contentAccessibility",
+        title: "llms.txt",
+        fix: "Serve /llms.txt as Markdown with an H1 title, a one-line summary and links to the pages that matter.",
+        specs: &["https://llmstxt.org/"],
+    },
+    Meta {
+        key: "llmsFullTxt",
+        category: "contentAccessibility",
+        title: "llms-full.txt",
+        fix: "Serve /llms-full.txt with your documentation in one Markdown file, generated on deploy.",
+        specs: &["https://llmstxt.org/"],
     },
     Meta {
         key: "robotsTxtAiRules",

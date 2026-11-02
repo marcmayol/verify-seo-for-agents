@@ -16,6 +16,7 @@ fn tool_schema() -> Value {
                 "url": {"type": "string", "description": "The site to scan."},
                 "format": {"type": "string", "enum": ["agent", "json"], "description": "agent: Markdown with what to fix (default). json: the full report."},
                 "profile": {"type": "string", "enum": ["all", "content", "apiApp"], "description": "Which checks to run. Default: all."},
+                "enabledChecks": {"type": "array", "items": {"type": "string"}, "description": "Run exactly these checks instead of a profile. llmsTxt and llmsFullTxt only run when named here."},
             },
             "required": ["url"],
         },
@@ -47,7 +48,8 @@ fn call_tool(params: &Value) -> Value {
     }
     let args = &params["arguments"];
     let url = args["url"].as_str().unwrap_or("");
-    let result = scan::select(args["profile"].as_str(), None).and_then(|(keys, asked)| scan::scan(url, &keys, &asked));
+    let enabled = args["enabledChecks"].as_array().map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect());
+    let result = scan::select(args["profile"].as_str(), enabled).and_then(|(keys, asked)| scan::scan(url, &keys, &asked));
     match result {
         Err(e) => json!({"isError": true, "content": [{"type": "text", "text": e}]}),
         Ok(report) => {

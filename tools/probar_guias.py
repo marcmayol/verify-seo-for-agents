@@ -74,8 +74,8 @@ threading.Thread(target=servidor.serve_forever, daemon=True).start()
 
 mal = 0
 guias = {os.path.basename(f)[:-3]: open(f, encoding="utf-8").read() for f in glob.glob(os.path.join(BASE, "guides", "*.md"))}
-if len(guias) != 25:
-    sys.exit(f"Esperaba 25 guías y hay {len(guias)}")
+if len(guias) != 27:
+    sys.exit(f"Esperaba 27 guías y hay {len(guias)}")
 print("--- Ejemplos")
 for clave, texto in sorted(guias.items()):
     if clave.startswith("_") or clave in SIN_PRUEBA_LOCAL:

@@ -11,7 +11,7 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'  # without the progress bar, Invoke-WebRequest is much faster on PowerShell 5.1
 
 $repo = 'marcmayol/verify-seo-for-agents'
-$tag = if ($env:VERIFY_SEO_VERSION) { $env:VERIFY_SEO_VERSION } else { 'v0.1.1' }
+$tag = if ($env:VERIFY_SEO_VERSION) { $env:VERIFY_SEO_VERSION } else { 'v0.1.2' }
 $dir = if ($env:VERIFY_SEO_INSTALL_DIR) { $env:VERIFY_SEO_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Programs\verify-seo' }
 $base = "https://github.com/$repo/releases/download/$tag"
 # Windows on ARM runs the x64 binary through emulation.

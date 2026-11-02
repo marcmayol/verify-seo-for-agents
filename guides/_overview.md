@@ -52,6 +52,8 @@ A status is `pass`, `fail`, `neutral` (does not apply, not counted) or `unableTo
 
 Each level needs all the ones before it.
 
+`llmsTxt` and `llmsFullTxt` are optional extras: they run only when named with `--checks` or `enabledChecks`, and never change the level or the percentage.
+
 The percentage leaves out commerce, neutral results and the Personal Agent Protocol. The A2A Agent Card and AP2 count only when requested by name.
 
 Commerce checks only count on sites detected as stores, which takes three or more signals in the first 100,000 characters of the homepage: a store platform, payment brands, product schema, links such as `/cart`, or several prices.
